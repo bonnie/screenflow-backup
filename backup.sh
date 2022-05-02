@@ -1,3 +1,6 @@
+# dropbox uploader GitHub
+# https://github.com/andreafabrizi/Dropbox-Uploader
+
 cmd="tar"
 # cmd="echo tar"
 
