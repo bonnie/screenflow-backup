@@ -8,18 +8,27 @@ export cmd
 datestring=`date +%s`
 dest="raw screenflow zipped"
 
+if [ $# -eq 0 ]
+  then
+    echo "usage: bash backup.sh /path/to/directory/with/screenflow/files"
+    exit
+fi
+
 echo "RENAMING old directory"
 mv -f "$1/${dest}" "$1/${dest} ${datestring}"
 
 for dir in "" "_archived" "_unused"
 do
-  echo "PROCESSING $1/${dir}"
-  mkdir "$1/raw screenflow zipped/${dir}"
-  for sfile in "$1/${dir}"/*.screenflow ; do
-    f="${sfile##*/}"
-    echo "    ${f}"
-    ${cmd} -czf "$1/${dest}/${dir}/${f}.tar.gz" -C "$1/${dir}" "${f}" 
-  done  
+  if [ -d "$1/${dir}" ]
+    then
+      echo "PROCESSING $1/${dir}"
+      mkdir "$1/raw screenflow zipped/${dir}"
+      for sfile in "$1/${dir}"/*.screenflow ; do
+        f="${sfile##*/}"
+        echo "    ${f}"
+        ${cmd} -czf "$1/${dest}/${dir}/${f}.tar.gz" -C "$1/${dir}" "${f}" 
+      done  
+  fi
 done
 
 # echo "PROCESSING $1"
