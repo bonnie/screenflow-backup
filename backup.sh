@@ -13,6 +13,7 @@ dropbox_script="/Users/presenter/src/Dropbox-Uploader/dropbox_uploader.sh"
 if [ $# -lt 2 ]
   then
     echo "usage: bash backup.sh /path/to/directory/with/screenflow/files /path/to/copy/to/on/dropbox/within/studio-uploads"
+    echo "Example: bash backup.sh /Users/presenter/Documents/test-next-raw-video/01-introduction \"/next-test/01-introduction\""
     exit
 fi
 
