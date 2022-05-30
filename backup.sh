@@ -48,13 +48,16 @@ do
           then
             echo "    compressing ${f}"
             ${cmd} -czf "$1/${dest}/${dir}/${f}.tar.gz" -C "$1/${dir}" "${f}"
-            compressed_file_count=compressed_file_count + 1
+            ((compressed_file_count=compressed_file_count + 1))
           # else
           #   echo "    [SKIPPING ${f}]"
         fi
       done
       # record latest mod date
-      echo ${datestring} > "$1/${dir}/${backup_file}"
+      if [ ${compressed_file_count} -gt 0 ]
+        then
+          echo ${datestring} > "$1/${dir}/${backup_file}"
+      fi
   fi
 done
 
