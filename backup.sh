@@ -9,6 +9,8 @@ export cmd
 datestring=`date +%s`
 dest="raw screenflow zipped"
 dropbox_script="/Users/presenter/src/Dropbox-Uploader/dropbox_uploader.sh"
+backup_file="last-backup-timestamp"
+compressed_file_count=0
 
 if [ $# -lt 2 ]
   then
@@ -17,20 +19,42 @@ if [ $# -lt 2 ]
     exit
 fi
 
-echo "RENAMING old directory"
-mv -f "$1/${dest}" "$1/${dest} ${datestring}"
+if [ -d "$1/${dest}" ]
+  then
+    echo "RENAMING old directory"
+    mv -f "$1/${dest}" "$1/${dest}-${datestring}"
+fi
 
 for dir in "" "_archived" "_unused"
 do
   if [ -d "$1/${dir}" ]
     then
       echo "PROCESSING $1/${dir}"
-      mkdir "$1/raw screenflow zipped/${dir}"
+      # get last backup date
+      if [ -f "$1/${dir}/${backup_file}" ]
+        then
+          last_backup=`cat "$1/${dir}/${backup_file}"`
+          last_backup_date=`date -r ${last_backup}`
+          echo "  backing up files since ${last_backup_date}"
+        else
+          last_backup=0
+          echo "  backing up ALL files"
+      fi
+      mkdir "$1/${dest}/${dir}"
       for sfile in "$1/${dir}"/*.screenflow ; do
         f="${sfile##*/}"
-        echo "    ${f}"
-        ${cmd} -czf "$1/${dest}/${dir}/${f}.tar.gz" -C "$1/${dir}" "${f}" 
-      done  
+        mod_date=`date -r "$1/${dir}/${f}" +%s`
+        if [ ${mod_date} -gt ${last_backup} ]
+          then
+            echo "    compressing ${f}"
+            ${cmd} -czf "$1/${dest}/${dir}/${f}.tar.gz" -C "$1/${dir}" "${f}"
+            compressed_file_count=compressed_file_count + 1
+          # else
+          #   echo "    [SKIPPING ${f}]"
+        fi
+      done
+      # record latest mod date
+      echo ${datestring} > "$1/${dir}/${backup_file}"
   fi
 done
 
@@ -42,15 +66,20 @@ done
 #     ${dropbox_script} move $2 "$2-${datestring}"
 # fi
 
-destdir="$2-${datestring}"
+if [ ${compressed_file_count} -gt 0 ]
+  then
+    destdir="$2-${datestring}"
 
-echo "---------> making new dropbox directory: ${destdir}"
-"${dropbox_script}" mkdir ${destdir}
+    echo "---------> making new dropbox directory: ${destdir}"
+    "${dropbox_script}" mkdir ${destdir}
 
-echo "---------> Uploading to dropbox folder $2"
-"${dropbox_script}" -hp upload "$1/raw screenflow zipped/"* "${destdir}" 
+    echo "---------> Uploading to dropbox folder $2"
+    "${dropbox_script}" -hp upload "$1/${dest}/"* "${destdir}" 
 
-echo "----------> look for files in /Apps/studio-upload/${destdir}"
+    echo "----------> look for files in /Apps/studio-upload/${destdir}"
+  else
+    echo "----------> NO FILES BACKED UP FOR $1"
+fi
 
 # echo "PROCESSING $1"
 # dir=$1
